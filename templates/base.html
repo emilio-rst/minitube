@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MiniTube{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'youtube-red': '#FF0000',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-youtube-red rounded"></div>
+                        <span class="text-xl font-bold text-gray-800">MiniTube</span>
+                    </a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'home' %}" class="text-gray-700 hover:text-youtube-red px-3 py-2 rounded-md text-sm font-medium">Home</a>
+                    <a href="{% url 'popular_videos' %}" class="text-gray-700 hover:text-youtube-red px-3 py-2 rounded-md text-sm font-medium">Popular</a>
+                    
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'upload_video' %}" class="text-gray-700 hover:text-youtube-red px-3 py-2 rounded-md text-sm font-medium">Upload</a>
+                        <a href="{% url 'user_history' %}" class="text-gray-700 hover:text-youtube-red px-3 py-2 rounded-md text-sm font-medium">History</a>
+                        <a href="{% url 'profile' %}" class="text-gray-700 hover:text-youtube-red px-3 py-2 rounded-md text-sm font-medium">Profile</a>
+                        <a href="{% url 'logout' %}" class="text-gray-700 hover:text-youtube-red px-3 py-2 rounded-md text-sm font-medium">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-gray-700 hover:text-youtube-red px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="{% url 'register' %}" class="bg-youtube-red text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 mt-4">
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded-md {% if message.tags == 'error' %}bg-red-100 border border-red-400 text-red-700{% else %}bg-green-100 border border-green-400 text-green-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-16">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="text-center text-gray-600">
+                <p>&copy; 2024 MiniTube. A simple video sharing platform.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html> 

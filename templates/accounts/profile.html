@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - MiniTube{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ user.username }}'s Profile</h1>
+        <p class="text-gray-600">{{ user.email }}</p>
+        <p class="text-sm text-gray-500">Member since {{ user.date_joined|date:"F d, Y" }}</p>
+    </div>
+
+    <!-- User's Videos -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Your Videos ({{ user_videos.count }})</h2>
+        
+        {% if user_videos %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for video in user_videos %}
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="aspect-video bg-gray-200">
+                            <iframe 
+                                src="{{ video.youtube_embed_link }}" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen
+                                class="w-full h-full">
+                            </iframe>
+                        </div>
+                        <div class="p-3">
+                            <h3 class="font-semibold text-gray-800 mb-1">
+                                <a href="{% url 'video_detail' video.id %}" class="hover:text-youtube-red">
+                                    {{ video.title }}
+                                </a>
+                            </h3>
+                            <div class="flex items-center justify-between text-sm text-gray-500">
+                                <span>{{ video.created_at|date:"M d, Y" }}</span>
+                                <div class="flex items-center space-x-2">
+                                    <span>{{ video.like_count }} likes</span>
+                                    <span>{{ video.comment_count }} comments</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8">
+                <div class="text-4xl mb-2">📹</div>
+                <p class="text-gray-600 mb-4">You haven't uploaded any videos yet.</p>
+                <a href="{% url 'upload_video' %}" class="bg-youtube-red text-white px-4 py-2 rounded-md hover:bg-red-700">
+                    Upload Your First Video
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- User's Comments -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Your Comments ({{ user_comments.count }})</h2>
+        
+        {% if user_comments %}
+            <div class="space-y-4">
+                {% for comment in user_comments %}
+                    <div class="border-b border-gray-200 pb-4 last:border-b-0">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="text-sm text-gray-500">On:</span>
+                                    <a href="{% url 'video_detail' comment.video.id %}" class="font-semibold text-gray-800 hover:text-youtube-red">
+                                        {{ comment.video.title }}
+                                    </a>
+                                </div>
+                                <p class="text-gray-700">{{ comment.content }}</p>
+                                <div class="flex items-center space-x-2 mt-2">
+                                    <span class="text-sm text-gray-500">{{ comment.created_at|date:"M d, Y" }}</span>
+                                    <form method="post" action="{% url 'delete_comment' comment.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-red-500 hover:text-red-700 text-sm" onclick="return confirm('Are you sure you want to delete this comment?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8">
+                <div class="text-4xl mb-2">💬</div>
+                <p class="text-gray-600">You haven't made any comments yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

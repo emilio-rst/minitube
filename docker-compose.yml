@@ -1,0 +1,60 @@
+services:
+  # Nginx for load balancing
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - static_volume:/app/staticfiles
+    depends_on:
+      - web
+    networks:
+      - minitube_network
+
+  # Django API container
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py collectstatic --noinput --clear &&
+             python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8000 --workers 3 minitube.wsgi:application"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    expose:
+      - "8000"
+    environment:
+      - DEBUG=True
+      - POSTGRES_DB=minitube_db
+      - POSTGRES_USER=minitube_user
+      - POSTGRES_PASSWORD=minitube_password
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - SECRET_KEY=your-secret-key-here-change-in-production
+    depends_on:
+      - db
+    networks:
+      - minitube_network
+    restart: unless-stopped
+
+  # PostgreSQL database
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=minitube_db
+      - POSTGRES_USER=minitube_user
+      - POSTGRES_PASSWORD=minitube_password
+    networks:
+      - minitube_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  static_volume:
+
+networks:
+  minitube_network:
+    driver: bridge 
