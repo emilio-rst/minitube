@@ -10,12 +10,12 @@ class GetPopularVideosUseCase:
     This encapsulates the business logic for determining video popularity.
     """
     
-    def __init__(self, video_repository=None):
+    def __init__(self, video_repository=Video.objects):
         """
         Initialize the use case with a video repository.
         Defaults to Django's Video.objects manager.
         """
-        self.video_repository = video_repository or Video.objects
+        self.video_repository = video_repository
     
     def execute(self, limit: int = 5) -> List[Video]:
         """
