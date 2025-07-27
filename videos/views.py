@@ -7,6 +7,7 @@ from .models import Video
 from .forms import VideoUploadForm
 from interactions.models import VideoView
 from .use_cases import GetPopularVideosUseCase
+from .constants import HOME_VIDEOS_LIMIT, POPULAR_VIDEOS_LIMIT, HISTORY_PAGINATION_PER_PAGE
 
 
 def home(request):
@@ -15,7 +16,7 @@ def home(request):
     if videos:
         # Shuffle videos for random display
         random.shuffle(videos)
-        videos = videos[:12]  # Show max 12 videos
+        videos = videos[:HOME_VIDEOS_LIMIT]  # Show max videos based on constant
     
     return render(request, 'videos/home.html', {'videos': videos})
 
@@ -62,9 +63,9 @@ def upload_video(request):
 
 
 def popular_videos(request):
-    """Show the 5 most popular videos based on the scoring system"""
+    """Show the most popular videos based on the scoring system"""
     use_case = GetPopularVideosUseCase()
-    popular_videos = use_case.execute(limit=5)
+    popular_videos = use_case.execute(limit=POPULAR_VIDEOS_LIMIT)
     
     return render(request, 'videos/popular.html', {'videos': popular_videos})
 
@@ -74,8 +75,8 @@ def user_history(request):
     """Show user's video viewing history"""
     video_views = VideoView.objects.filter(user=request.user).select_related('video')
     
-    # Paginate by 10
-    paginator = Paginator(video_views, 10)
+    # Paginate based on constant
+    paginator = Paginator(video_views, HISTORY_PAGINATION_PER_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
