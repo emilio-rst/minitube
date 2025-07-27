@@ -36,7 +36,7 @@ class GetPopularVideosUseCase:
             return self._get_random_videos(limit)
     
     def _get_current_month_videos(self):
-        """Get videos created in the current month."""
+        """Get videos created in the current month with popularity scores calculated."""
         now = timezone.now()
         start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         return self.video_repository.filter(created_at__gte=start_of_month)
@@ -44,6 +44,7 @@ class GetPopularVideosUseCase:
     def _get_popular_from_current_month(self, current_month_videos, limit: int) -> List[Video]:
         """
         Get popular videos from current month based on popularity scores.
+        Uses database-level calculations and sorting for better performance.
         
         Args:
             current_month_videos: QuerySet of current month videos
@@ -52,25 +53,21 @@ class GetPopularVideosUseCase:
         Returns:
             List of popular videos
         """
-        # Calculate popularity scores and sort
-        videos_with_scores = []
-        for video in current_month_videos:
-            score = video.popularity_score
-            videos_with_scores.append((video, score))
+        # Use the with_popularity_score queryset method to get videos with calculated scores
+        videos_with_scores = current_month_videos.with_popularity_score()
         
-        # Sort by popularity score (descending)
-        videos_with_scores.sort(key=lambda x: x[1], reverse=True)
+        # Order by popularity score (descending) and limit at database level
+        popular_videos = list(videos_with_scores.order_by('-popularity_score')[:limit])
         
-        # Get top videos
-        popular_videos = [video for video, score in videos_with_scores[:limit]]
-        
-        # If all videos have the same score, pick random
-        if len(videos_with_scores) > 1:
-            first_score = videos_with_scores[0][1]
-            if all(score == first_score for _, score in videos_with_scores[:limit]):
+        # If we have multiple videos and all have the same score, pick random
+        if len(popular_videos) > 1:
+            first_video = popular_videos[0]
+            if all(video.popularity_score == first_video.popularity_score for video in popular_videos):
+                # Convert to list and pick random
+                all_current_videos = list(current_month_videos)
                 popular_videos = random.sample(
-                    list(current_month_videos), 
-                    min(limit, current_month_videos.count())
+                    all_current_videos, 
+                    min(limit, len(all_current_videos))
                 )
         
         return popular_videos
@@ -78,6 +75,7 @@ class GetPopularVideosUseCase:
     def _get_random_videos(self, limit: int) -> List[Video]:
         """
         Get random videos when no current month videos exist.
+        Uses database-level random selection for better performance.
         
         Args:
             limit: Maximum number of videos to return
@@ -85,5 +83,6 @@ class GetPopularVideosUseCase:
         Returns:
             List of random videos
         """
-        all_videos = list(self.video_repository.all())
-        return random.sample(all_videos, min(limit, len(all_videos))) if all_videos else [] 
+        # Use database-level random selection
+        random_videos = list(self.video_repository.order_by('?')[:limit])
+        return random_videos 

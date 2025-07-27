@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from .querysets import VideoQuerySet
 
 
 class Video(models.Model):
@@ -9,6 +10,9 @@ class Video(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='videos')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Use custom queryset
+    objects = VideoQuerySet.as_manager()
 
     class Meta:
         ordering = ['-created_at']
@@ -28,15 +32,8 @@ class Video(models.Model):
     def comment_count(self):
         return self.comments.count()
 
-    @property
-    def popularity_score(self):
-        """Calculate popularity score based on the rules"""
-        likes = self.like_count * 10
-        dislikes = self.dislike_count * 5
-        comments = self.comment_count * 1
-        
-        # Time bonus: 100 points per day since creation
-        days_since_creation = (timezone.now() - self.created_at).days
-        time_bonus = days_since_creation * 100
-        
-        return likes - dislikes + comments + time_bonus
+
+
+
+    
+
